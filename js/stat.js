@@ -38,6 +38,14 @@ var getMaxTime = function (arr) {
   return false;
 };
 
+var renderTitle = function (ctx, x, y, text) {
+  ctx.fillText(text, x, y);
+};
+
+var setRandomSaturation = function (hue, lightness) {
+  return 'hsl(' + hue + ',' + Math.random() * 100 + '%,' + lightness + '%)';
+};
+
 window.renderStatistics = function (ctx, players, times) {
   renderCloud(ctx, CLOUD_X + 10, CLOUD_Y + 10, 'rgba(0, 0, 0, 0.7)');
   renderCloud(ctx, CLOUD_X, CLOUD_Y, '#fff');
@@ -46,34 +54,24 @@ window.renderStatistics = function (ctx, players, times) {
   ctx.textBaseline = 'hanging';
   ctx.textAlign = 'center';
 
-  ctx.fillText('Ура вы победили!', CLOUD_X + CLOUD_WIDTH / 2, CLOUD_TITLE_Y);
-  ctx.fillText('Список результатов:', CLOUD_X + CLOUD_WIDTH / 2, CLOUD_TITLE_Y + 20);
-
-  for (var i = 0; i < times.length; i++) {
-    times[i] = Math.round(times[i]);
-  }
+  renderTitle(ctx, CLOUD_X + CLOUD_WIDTH / 2, CLOUD_TITLE_Y, 'Ура вы победили!');
+  renderTitle(ctx, CLOUD_X + CLOUD_WIDTH / 2, CLOUD_TITLE_Y + 20, 'Список результатов:');
 
   var maxTime = getMaxTime(times);
-  var firstBarMargin = (CLOUD_WIDTH - ((BAR_WIDTH + BAR_GAP) * players.length - BAR_GAP)) / 2;
+  var firstBarMargin = CLOUD_X + (CLOUD_WIDTH - ((BAR_WIDTH + BAR_GAP) * players.length - BAR_GAP)) / 2;
 
-  for (i = 0; i < players.length; i++) {
+  for (var i = 0; i < players.length; i++) {
+    times[i] = Math.round(times[i]);
+
     var barHeight = Math.round(BAR_MAX_HEIGHT * times[i] / maxTime);
     var barMarginTop = GRAPH_Y + BAR_MAX_HEIGHT - barHeight;
-    var barMarginLeft = CLOUD_X + firstBarMargin;
-
-    if (i > 0) {
-      barMarginLeft += (BAR_GAP + BAR_WIDTH) * i;
-    }
+    var barMarginLeft = firstBarMargin + (BAR_GAP + BAR_WIDTH) * i;
 
     ctx.fillText(times[i], barMarginLeft + BAR_WIDTH / 2, barMarginTop);
 
     ctx.save();
 
-    if (players[i] === 'Вы') {
-      ctx.fillStyle = COLOR_SELF;
-    } else {
-      ctx.fillStyle = 'hsl(245,' + Math.random() * 100 + '%,50%)';
-    }
+    ctx.fillStyle = players[i] === 'Вы' ? COLOR_SELF : setRandomSaturation(245, 50);
 
     ctx.fillRect(barMarginLeft, barMarginTop + BAR_TEXT_HEIGHT, BAR_WIDTH, barHeight);
 
