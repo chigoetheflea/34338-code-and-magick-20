@@ -62,12 +62,16 @@ var wizardsData = generateInfo(WIZARDS_COUNT);
 var wizardsList = popupWindow.querySelector('.setup-similar-list');
 var wizardTemplate = document.querySelector('#similar-wizard-template').content.querySelector('.setup-similar-item');
 
-var fragment = document.createDocumentFragment();
+var createFragment = function (data, template) {
+  var fragment = document.createDocumentFragment();
 
-for (var i = 0; i < WIZARDS_COUNT; i++) {
-  fragment.appendChild(renderWizard(wizardsData[i], wizardTemplate));
-}
+  for (var i = 0; i < data.length; i++) {
+    fragment.appendChild(renderWizard(data[i], template));
+  }
 
-wizardsList.appendChild(fragment);
+  return fragment;
+};
+
+wizardsList.appendChild(createFragment(wizardsData, wizardTemplate));
 
 popupWindow.querySelector('.setup-similar').classList.remove('hidden');
