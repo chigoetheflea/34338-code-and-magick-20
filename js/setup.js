@@ -1,8 +1,36 @@
 'use strict';
 
-var NAMES = ['Иван', 'Хуан Себастьян', 'Мария', 'Кристоф', 'Виктор', 'Юлия', 'Люпита', 'Вашингтон'];
-var SURNAMES = ['да Марья', 'Верон', 'Мирабелла', 'Вальц', 'Онопко', 'Топольницкая', 'Нионго', 'Ирвинг'];
-var COAT_COLORS = ['rgb(101, 137, 164)', 'rgb(241, 43, 107)', 'rgb(146, 100, 161)', 'rgb(56, 159, 117)', 'rgb(215, 210, 55)', 'rgb(0, 0, 0)'];
+var NAMES = [
+  'Иван',
+  'Хуан Себастьян',
+  'Мария',
+  'Кристоф',
+  'Виктор',
+  'Юлия',
+  'Люпита',
+  'Вашингтон'
+];
+
+var SURNAMES = [
+  'да Марья',
+  'Верон',
+  'Мирабелла',
+  'Вальц',
+  'Онопко',
+  'Топольницкая',
+  'Нионго',
+  'Ирвинг'
+];
+
+var COAT_COLORS = [
+  'rgb(101, 137, 164)',
+  'rgb(241, 43, 107)',
+  'rgb(146, 100, 161)',
+  'rgb(56, 159, 117)',
+  'rgb(215, 210, 55)',
+  'rgb(0, 0, 0)'
+];
+
 var EYES_COLORS = ['black', 'red', 'blue', 'yellow', 'green'];
 var FIREBALL_COLORS = ['#ee4830', '#30a8ee', '#5ce6c0', '#e848d5', '#e6e848'];
 var WIZARDS_COUNT = 4;
@@ -58,10 +86,23 @@ var renderWizard = function (wizard, template) {
   return wizardElement;
 };
 
-var popupWindow = document.querySelector('.setup');
+var setupOpenButton = document.querySelector('.setup-open');
+
+var popupSetup = document.querySelector('.setup');
+var setupCloseButton = popupSetup.querySelector('.setup-close');
+var setupNameField = popupSetup.querySelector('.setup-user-name');
+var setupPlayer = popupSetup.querySelector('.setup-player');
+var setupWizardCoat = popupSetup.querySelector('.setup-wizard .wizard-coat');
+var setupWizardEyes = popupSetup.querySelector('.setup-wizard .wizard-eyes');
+var setupWizardFireball = popupSetup.querySelector('.setup-fireball-wrap');
+
+var setupForm = document.querySelector('.setup-wizard-form');
+var coatColorField = setupForm.querySelector('[name=coat-color]');
+var eyesColorField = setupForm.querySelector('[name=eyes-color]');
+var fireBallColorField = setupForm.querySelector('[name=fireball-color]');
 
 var wizardsData = generateInfo(WIZARDS_COUNT);
-var wizardsList = popupWindow.querySelector('.setup-similar-list');
+var wizardsList = popupSetup.querySelector('.setup-similar-list');
 var wizardTemplate = document.querySelector('#similar-wizard-template').content.querySelector('.setup-similar-item');
 
 var createFragment = function (data, template) {
@@ -76,20 +117,10 @@ var createFragment = function (data, template) {
 
 wizardsList.appendChild(createFragment(wizardsData, wizardTemplate));
 
-popupWindow.querySelector('.setup-similar').classList.remove('hidden');
-
-var setupOpenButton = document.querySelector('.setup-open');
-var setupCloseButton = document.querySelector('.setup-close');
-var setupNameField = document.querySelector('.setup-user-name');
-var setupForm = document.querySelector('.setup-wizard-form');
-var setupPlayer = document.querySelector('.setup-player');
-var setupWizardCoat = document.querySelector('.setup-wizard .wizard-coat');
-var setupWizardEyes = document.querySelector('.setup-wizard .wizard-eyes');
-var setupWizardFireball = document.querySelector('.setup-fireball-wrap');
+popupSetup.querySelector('.setup-similar').classList.remove('hidden');
 
 var setWizardCoatColor = function () {
   var randomCoatColor = getRandomValue(COAT_COLORS);
-  var coatColorField = setupForm.querySelector('[name=coat-color]');
 
   setupWizardCoat.style.fill = randomCoatColor;
   coatColorField.value = randomCoatColor;
@@ -97,7 +128,6 @@ var setWizardCoatColor = function () {
 
 var setWizardEyesColor = function () {
   var randomEyesColor = getRandomValue(EYES_COLORS);
-  var eyesColorField = setupForm.querySelector('[name=eyes-color]');
 
   setupWizardEyes.style.fill = randomEyesColor;
   eyesColorField.value = randomEyesColor;
@@ -105,38 +135,45 @@ var setWizardEyesColor = function () {
 
 var setWizardFireBallColor = function () {
   var randomFireballColor = getRandomValue(FIREBALL_COLORS);
-  var fireBallColorField = setupForm.querySelector('[name=fireball-color]');
 
   setupWizardFireball.style.background = randomFireballColor;
   fireBallColorField.value = randomFireballColor;
 };
 
 var onPlayerPress = function (evt) {
+  var target = evt.target;
+  var fireBallWrapSelector = '.setup-fireball-wrap';
 
-  if (evt.target === setupWizardCoat) {
+  if (target === setupWizardCoat) {
     setWizardCoatColor();
-  } else if (evt.target === setupWizardEyes) {
+  }
+
+  if (target === setupWizardEyes) {
     setWizardEyesColor();
-  } else if (evt.target.closest('.setup-fireball-wrap')) {
+  }
+
+  if (target.closest(fireBallWrapSelector)) {
     setWizardFireBallColor();
   }
 };
 
 var getValidityMessage = function (valueLength) {
-  var validityMessage = '';
-
   if (valueLength === 0) {
-    validityMessage = 'Введите имя вашего мага (минимум ' + MIN_NAME_LENGTH + ' симв.)';
-  } else if (valueLength < MIN_NAME_LENGTH) {
-    validityMessage = 'Ещё ' + (MIN_NAME_LENGTH - valueLength) + ' симв.';
-  } else if (valueLength > MAX_NAME_LENGTH) {
-    validityMessage = 'Удалите лишние ' + (valueLength - MAX_NAME_LENGTH) + ' симв.';
+    return 'Введите имя вашего мага (минимум ' + MIN_NAME_LENGTH + ' симв.)';
   }
 
-  return validityMessage;
+  if (valueLength < MIN_NAME_LENGTH) {
+    return 'Ещё ' + (MIN_NAME_LENGTH - valueLength) + ' симв.';
+  }
+
+  if (valueLength > MAX_NAME_LENGTH) {
+    return 'Удалите лишние ' + (valueLength - MAX_NAME_LENGTH) + ' симв.';
+  }
+
+  return '';
 };
 
-var onInputChange = function () {
+var onWizardNameChange = function () {
   var valueLength = setupNameField.value.length;
 
   setupNameField.setCustomValidity(getValidityMessage(valueLength));
@@ -151,18 +188,18 @@ var onPopupEscPress = function (evt) {
 };
 
 var openPopup = function () {
-  popupWindow.classList.remove('hidden');
+  popupSetup.classList.remove('hidden');
 
   document.addEventListener('keydown', onPopupEscPress);
-  setupNameField.addEventListener('input', onInputChange);
+  setupNameField.addEventListener('input', onWizardNameChange);
   setupPlayer.addEventListener('click', onPlayerPress);
 };
 
 var closePopup = function () {
-  popupWindow.classList.add('hidden');
+  popupSetup.classList.add('hidden');
 
   document.removeEventListener('keydown', onPopupEscPress);
-  setupNameField.removeEventListener('input', onInputChange);
+  setupNameField.removeEventListener('input', onWizardNameChange);
   setupPlayer.removeEventListener('click', onPlayerPress);
 };
 
