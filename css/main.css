@@ -912,7 +912,7 @@ input[type=radio]:checked + .review-mark-label
     transform: translateX(-50%);
 }
 
-.response-error
+.response
 {
     padding: 20px;
     color: #ffffff;
