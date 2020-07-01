@@ -1,28 +1,6 @@
 'use strict';
 
 (function () {
-  var NAMES = [
-    'Иван',
-    'Хуан Себастьян',
-    'Мария',
-    'Кристоф',
-    'Виктор',
-    'Юлия',
-    'Люпита',
-    'Вашингтон'
-  ];
-
-  var SURNAMES = [
-    'да Марья',
-    'Верон',
-    'Мирабелла',
-    'Вальц',
-    'Онопко',
-    'Топольницкая',
-    'Нионго',
-    'Ирвинг'
-  ];
-
   var COAT_COLORS = [
     'rgb(101, 137, 164)',
     'rgb(241, 43, 107)',
@@ -34,9 +12,10 @@
 
   var EYES_COLORS = ['black', 'red', 'blue', 'yellow', 'green'];
   var FIREBALL_COLORS = ['#ee4830', '#30a8ee', '#5ce6c0', '#e848d5', '#e6e848'];
-  var WIZARDS_COUNT = 4;
   var MIN_NAME_LENGTH = 2;
   var MAX_NAME_LENGTH = 25;
+  var MAX_SIMILAR_WIZARD_COUNT = 4;
+  var SUCCESS_SAVE_TIMEOUT = 2000;
 
   var getRandomValue = function (arr) {
     var randomElement = Math.floor(Math.random() * arr.length);
@@ -44,48 +23,26 @@
     return arr[randomElement];
   };
 
-  var searchTweens = function (subject, arr) {
-    for (var i = 0; i < arr.length; i++) {
-      var isNamesake = arr[i].name === subject;
-
-      if (isNamesake) {
-        return true;
-      }
-    }
-
-    return false;
-  };
-
-  var generateInfo = function (count) {
-    var info = [];
+  var getRandomElements = function (fullArr, count) {
+    var randomElements = [];
 
     do {
-      var randomName = getRandomValue(NAMES);
-      var randomSurname = getRandomValue(SURNAMES);
-      var fullName = Math.random() > 0.5 ? randomName + ' ' + randomSurname : randomSurname + ' ' + randomName;
+      var randomElement = getRandomValue(fullArr);
+      var isCurrentElementIncludes = randomElements.includes(randomElement);
 
-      var item = {
-        name: fullName,
-        coatColor: getRandomValue(COAT_COLORS),
-        eyesColor: getRandomValue(EYES_COLORS)
-      };
-
-      var isNamesake = searchTweens(fullName, info);
-
-      if (!isNamesake) {
-        info.push(item);
+      if (!isCurrentElementIncludes) {
+        randomElements.push(randomElement);
       }
+    } while (randomElements.length !== count);
 
-    } while (info.length !== count);
-
-    return info;
+    return randomElements;
   };
 
   var renderWizard = function (wizard, template) {
     var wizardElement = template.cloneNode(true);
 
     wizardElement.querySelector('.setup-similar-label').textContent = wizard.name;
-    wizardElement.querySelector('.wizard-coat').style.fill = wizard.coatColor;
+    wizardElement.querySelector('.wizard-coat').style.fill = wizard.colorCoat;
     wizardElement.querySelector('.wizard-eyes').style.fill = wizard.eyesColor;
 
     return wizardElement;
@@ -102,11 +59,11 @@
   var eyesColorField = setupForm.querySelector('[name=eyes-color]');
   var fireBallColorField = setupForm.querySelector('[name=fireball-color]');
 
-  var wizardsData = generateInfo(WIZARDS_COUNT);
   var wizardsList = popupSetup.querySelector('.setup-similar-list');
   var wizardTemplate = document.querySelector('#similar-wizard-template').content.querySelector('.setup-similar-item');
+  var errorMessage = popupSetup.querySelector('.response-error');
 
-  var createFragment = function (data, template) {
+  var createWizardsFragment = function (data, template) {
     var fragment = document.createDocumentFragment();
 
     for (var i = 0; i < data.length; i++) {
@@ -116,9 +73,37 @@
     return fragment;
   };
 
-  wizardsList.appendChild(createFragment(wizardsData, wizardTemplate));
+  var renderSimilarWizards = function (data) {
+    hideResponseResult();
 
-  popupSetup.querySelector('.setup-similar').classList.remove('hidden');
+    var similarWizards = getRandomElements(data, MAX_SIMILAR_WIZARD_COUNT);
+
+    wizardsList.appendChild(createWizardsFragment(similarWizards, wizardTemplate));
+
+    popupSetup.querySelector('.setup-similar').classList.remove('hidden');
+  };
+
+  var hideResponseResult = function () {
+    errorMessage.classList.add('hidden');
+
+    errorMessage.textContent = '';
+  };
+
+  var showResponseResult = function (message, isSave) {
+    errorMessage.textContent = message;
+
+    errorMessage.classList.remove('hidden');
+
+    if (isSave) {
+      setTimeout(function () {
+        hideResponseResult();
+
+        window.closePopup();
+      }, SUCCESS_SAVE_TIMEOUT);
+    }
+  };
+
+  window.backend.load(renderSimilarWizards, showResponseResult);
 
   var setWizardCoatColor = function () {
     var randomCoatColor = getRandomValue(COAT_COLORS);
@@ -186,6 +171,11 @@
 
       setupNameField.setCustomValidity(getValidityMessage(valueLength));
       setupNameField.reportValidity();
+    },
+    onSetupSubmit: function (evt) {
+      evt.preventDefault();
+
+      window.backend.save(new FormData(setupForm), showResponseResult, showResponseResult);
     }
   };
 })();

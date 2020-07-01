@@ -56,11 +56,4 @@
   };
 
   dragLever.addEventListener('mousedown', onDragLeverMouseDown);
-
-  window.dialog = {
-    resetSetupPosition: function (coords) {
-      popupSetup.style.top = coords.top + 'px';
-      popupSetup.style.left = coords.left + 'px';
-    }
-  };
 })();
