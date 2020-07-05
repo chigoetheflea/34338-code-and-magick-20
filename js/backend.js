@@ -37,10 +37,12 @@
     return ErrorMessage.COMMON_ERROR + status + ' ' + text;
   };
 
-  var onDataFromServerLoad = function (xhr, onLoad, onError) {
-    var isLoad = xhr.status === StatusCode.OK;
+  var isLoad = function (xhr) {
+    return xhr.status === StatusCode.OK;
+  };
 
-    if (isLoad) {
+  var onDataFromServerLoad = function (xhr, onLoad, onError) {
+    if (isLoad(xhr)) {
       onLoad(xhr.response, false);
     } else {
       onError(getErrorMessage(xhr.status, xhr.statusText));
@@ -52,9 +54,7 @@
   };
 
   var onDataToServerLoad = function (xhr, onLoad, onError) {
-    var isLoad = xhr.status === StatusCode.OK;
-
-    if (isLoad) {
+    if (isLoad(xhr)) {
       onLoad(SUCCESS_SAVE_MESSAGE, true);
     } else {
       onError(getErrorMessage(xhr.status, xhr.statusText));
@@ -81,29 +81,32 @@
     onError(ErrorMessage.TIMEOUT + timeout + TIMEOUT_UNIT);
   };
 
+  var createXHR = function () {
+    var xhr = new XMLHttpRequest();
+
+    xhr.responseType = RESPONSE_TYPE;
+    xhr.timeout = TIMEOUT;
+
+    return xhr;
+  };
+
   window.backend = {
     load: function (onLoad, onError) {
-      var xhr = new XMLHttpRequest();
-      xhr.responseType = RESPONSE_TYPE;
+      var xhr = createXHR();
 
       xhr.addEventListener('load', onDataFromServerLoad.bind(null, xhr, onLoad, onError));
       xhr.addEventListener('error', onDataFromServerErrorOccures.bind(null, onError));
       xhr.addEventListener('timeout', onDataFromServerTimesUp.bind(null, xhr.timeout, onError));
 
-      xhr.timeout = TIMEOUT;
-
       xhr.open('GET', Url.IN);
       xhr.send();
     },
     save: function (data, onLoad, onError) {
-      var xhr = new XMLHttpRequest();
-      xhr.responseType = RESPONSE_TYPE;
+      var xhr = createXHR();
 
       xhr.addEventListener('load', onDataToServerLoad.bind(null, xhr, onLoad, onError));
       xhr.addEventListener('error', onDataToServerErrorOccures.bind(null, onError));
       xhr.addEventListener('timeout', onDataToServerTimesUp.bind(null, xhr.timeout, onError));
-
-      xhr.timeout = TIMEOUT;
 
       xhr.open('POST', Url.OUT);
       xhr.send(data);
