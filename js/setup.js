@@ -23,21 +23,6 @@
     return arr[randomElement];
   };
 
-  var getRandomElements = function (fullArr, count) {
-    var randomElements = [];
-
-    do {
-      var randomElement = getRandomValue(fullArr);
-      var isCurrentElementIncludes = randomElements.includes(randomElement);
-
-      if (!isCurrentElementIncludes) {
-        randomElements.push(randomElement);
-      }
-    } while (randomElements.length !== count);
-
-    return randomElements;
-  };
-
   var renderWizard = function (wizard, template) {
     var wizardElement = template.cloneNode(true);
 
@@ -59,6 +44,8 @@
   var eyesColorField = setupForm.querySelector('[name=eyes-color]');
   var fireBallColorField = setupForm.querySelector('[name=fireball-color]');
 
+  var similarWizardsData;
+
   var wizardsList = popupSetup.querySelector('.setup-similar-list');
   var wizardTemplate = document.querySelector('#similar-wizard-template').content.querySelector('.setup-similar-item');
   var errorMessage = popupSetup.querySelector('.response');
@@ -76,9 +63,8 @@
   var renderSimilarWizards = function (data) {
     hideResponseResult();
 
-    var similarWizards = getRandomElements(data, MAX_SIMILAR_WIZARD_COUNT);
-
-    wizardsList.appendChild(createWizardsFragment(similarWizards, wizardTemplate));
+    wizardsList.innerHTML = '';
+    wizardsList.appendChild(createWizardsFragment(data, wizardTemplate));
 
     popupSetup.querySelector('.setup-similar').classList.remove('hidden');
   };
@@ -103,13 +89,63 @@
     }
   };
 
-  window.backend.load(renderSimilarWizards, showResponseResult);
+  var saveDataFromServer = function (data) {
+    similarWizardsData = data;
+
+    updateSimilarWizards();
+  };
+
+  window.backend.load(saveDataFromServer, showResponseResult);
+
+  var getWizardRank = function (wizard) {
+    var rank = 0;
+
+    if (wizard.colorCoat === wizardCoatColor) {
+      rank += 2;
+    }
+
+    if (wizard.colorEyes === wizardEyesColor) {
+      rank += 1;
+    }
+
+    return rank;
+  };
+
+  var compareNames = function (left, right) {
+    if (left > right) {
+      return 1;
+    }
+
+    if (left < right) {
+      return -1;
+    }
+
+    return 0;
+  };
+
+  var sortWizards = function (left, right) {
+    var difference = getWizardRank(right) - getWizardRank(left);
+
+    if (difference === 0) {
+      difference = compareNames(left.name, right.name);
+    }
+
+    return difference;
+  };
+
+  var updateSimilarWizards = function () {
+    var sortedWizards = similarWizardsData.slice().sort(sortWizards);
+
+    renderSimilarWizards(sortedWizards.slice(0, MAX_SIMILAR_WIZARD_COUNT));
+  };
 
   var setWizardCoatColor = function () {
     var randomCoatColor = getRandomValue(COAT_COLORS);
 
     setupWizardCoat.style.fill = randomCoatColor;
     coatColorField.value = randomCoatColor;
+
+    return randomCoatColor;
   };
 
   var setWizardEyesColor = function () {
@@ -117,6 +153,8 @@
 
     setupWizardEyes.style.fill = randomEyesColor;
     eyesColorField.value = randomEyesColor;
+
+    return randomEyesColor;
   };
 
   var setWizardFireBallColor = function () {
@@ -146,6 +184,9 @@
     return '';
   };
 
+  var wizardCoatColor = setWizardCoatColor();
+  var wizardEyesColor = setWizardEyesColor();
+
   window.setup = {
     onPlayerPress: function (evt) {
       var target = evt.target;
@@ -155,16 +196,18 @@
       var isFireball = target.closest(fireBallWrapSelector);
 
       if (isCoat) {
-        setWizardCoatColor();
+        wizardCoatColor = setWizardCoatColor();
       }
 
       if (isEyes) {
-        setWizardEyesColor();
+        wizardEyesColor = setWizardEyesColor();
       }
 
       if (isFireball) {
         setWizardFireBallColor();
       }
+
+      window.debounce(updateSimilarWizards);
     },
     onWizardNameChange: function () {
       var valueLength = setupNameField.value.length;
