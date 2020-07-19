@@ -28,7 +28,7 @@
 
     wizardElement.querySelector('.setup-similar-label').textContent = wizard.name;
     wizardElement.querySelector('.wizard-coat').style.fill = wizard.colorCoat;
-    wizardElement.querySelector('.wizard-eyes').style.fill = wizard.eyesColor;
+    wizardElement.querySelector('.wizard-eyes').style.fill = wizard.colorEyes;
 
     return wizardElement;
   };
@@ -44,7 +44,9 @@
   var eyesColorField = setupForm.querySelector('[name=eyes-color]');
   var fireBallColorField = setupForm.querySelector('[name=fireball-color]');
 
-  var similarWizardsData;
+  var similarWizardsData = null;
+  var wizardCoatColor = null;
+  var wizardEyesColor = null;
 
   var wizardsList = popupSetup.querySelector('.setup-similar-list');
   var wizardTemplate = document.querySelector('#similar-wizard-template').content.querySelector('.setup-similar-item');
@@ -140,21 +142,17 @@
   };
 
   var setWizardCoatColor = function () {
-    var randomCoatColor = getRandomValue(COAT_COLORS);
+    wizardCoatColor = getRandomValue(COAT_COLORS);
 
-    setupWizardCoat.style.fill = randomCoatColor;
-    coatColorField.value = randomCoatColor;
-
-    return randomCoatColor;
+    setupWizardCoat.style.fill = wizardCoatColor;
+    coatColorField.value = wizardCoatColor;
   };
 
   var setWizardEyesColor = function () {
-    var randomEyesColor = getRandomValue(EYES_COLORS);
+    wizardEyesColor = getRandomValue(EYES_COLORS);
 
-    setupWizardEyes.style.fill = randomEyesColor;
-    eyesColorField.value = randomEyesColor;
-
-    return randomEyesColor;
+    setupWizardEyes.style.fill = wizardEyesColor;
+    eyesColorField.value = wizardEyesColor;
   };
 
   var setWizardFireBallColor = function () {
@@ -184,8 +182,8 @@
     return '';
   };
 
-  var wizardCoatColor = setWizardCoatColor();
-  var wizardEyesColor = setWizardEyesColor();
+  setWizardCoatColor();
+  setWizardEyesColor();
 
   window.setup = {
     onPlayerPress: function (evt) {
@@ -196,11 +194,11 @@
       var isFireball = target.closest(fireBallWrapSelector);
 
       if (isCoat) {
-        wizardCoatColor = setWizardCoatColor();
+        setWizardCoatColor();
       }
 
       if (isEyes) {
-        wizardEyesColor = setWizardEyesColor();
+        setWizardEyesColor();
       }
 
       if (isFireball) {
